@@ -5,9 +5,6 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "postgres-mcp --access-mode=unrestricted --transport=sse",
-    "healthcheckPath": "/",
-    "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
