@@ -1,37 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Command is first arg (default provided by ENTRYPOINT)
 cmd="${1:-postgres-mcp}"
 shift || true
 
-# Prefer DATABASE_URL if present; otherwise DATABASE_URI; otherwise nothing.
 DB_URI="${DATABASE_URL:-${DATABASE_URI:-}}"
 
-# If Railway provided $PORT but caller didn't pass --port, append it.
-append_port=true
+need_transport=true
+need_sse_host=true
+need_sse_port=true
+
 for a in "$@"; do
-  if [[ "$a" == "--port" || "$a" == "-p" ]]; then
-    append_port=false
-    break
-  fi
+  [[ "$a" == "--transport" ]] && need_transport=false
+  [[ "$a" == "--sse-host"  ]] && need_sse_host=false
+  [[ "$a" == "--sse-port"  ]] && need_sse_port=false
 done
-if [[ "${PORT:-}" != "" && "$append_port" == true ]]; then
-  set -- "$@" --port "$PORT"
+
+$need_transport && set -- "$@" --transport sse
+$need_sse_host  && set -- "$@" --sse-host 0.0.0.0
+if [[ -n "${PORT:-}" && "$need_sse_port" == true ]]; then
+  set -- "$@" --sse-port "$PORT"
 fi
 
-# If we have a DB URI and user didn't pass one positionally, append it.
+# Append DB URL as positional if not already provided
 if [[ -n "$DB_URI" ]]; then
   has_db=false
   for a in "$@"; do
-    if [[ "$a" =~ ^postgres(ql)?:// ]]; then
-      has_db=true
-      break
-    fi
+    if [[ "$a" =~ ^postgres(ql)?:// ]]; then has_db=true; break; fi
   done
-  if [[ "$has_db" == false ]]; then
-    set -- "$@" "$DB_URI"
-  fi
+  [[ "$has_db" == false ]] && set -- "$@" "$DB_URI"
 fi
 
 exec "$cmd" "$@"
