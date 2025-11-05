@@ -10,6 +10,13 @@ need_transport=true
 need_sse_host=true
 need_sse_port=true
 
+# Optional: test the DB connection on boot for clearer errors
+if command -v psql >/dev/null 2>&1 && [[ -n "$DB_URI" ]]; then
+  echo "Health: testing DB connection..."
+  PGPASSWORD="" psql "$DB_URI" -c "SELECT 1;" >/dev/null && \
+    echo "Health: DB OK" || echo "Health: DB FAILED"
+fi
+
 for a in "$@"; do
   [[ "$a" == "--transport" ]] && need_transport=false
   [[ "$a" == "--sse-host"  ]] && need_sse_host=false
