@@ -38,4 +38,14 @@ if [[ -n "$DB_URI" ]]; then
   [[ "$has_db" == false ]] && set -- "$@" "$DB_URI"
 fi
 
+# Optional: verify DB connectivity on boot for clearer errors
+if command -v psql >/dev/null 2>&1 && [[ -n "${DB_URI:-}" ]]; then
+  echo "Health: testing DB connection..."
+  if psql "$DB_URI" -c "SELECT 1;" >/dev/null 2>&1; then
+    echo "Health: DB OK"
+  else
+    echo "Health: DB FAILED"
+  fi
+fi
+
 exec "$cmd" "$@"
