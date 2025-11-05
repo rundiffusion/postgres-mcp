@@ -40,5 +40,15 @@ RUN chmod +x /app/docker-entrypoint.sh
 EXPOSE 8000
 USER app
 
+# Runtime deps
+RUN apt-get update && apt-get install -y \
+  ca-certificates \
+  libpq-dev \
+  iputils-ping \
+  dnsutils \
+  net-tools \
+  postgresql-client \
+  && rm -rf /var/lib/apt/lists/*
+
 ENTRYPOINT ["/app/docker-entrypoint.sh", "postgres-mcp"]
 CMD []
