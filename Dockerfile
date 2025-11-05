@@ -29,18 +29,7 @@ COPY --from=builder --chown=app:app /app /app
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Runtime deps
-RUN apt-get update && apt-get install -y \
-  libpq-dev iputils-ping dnsutils net-tools \
-  && rm -rf /var/lib/apt/lists/*
-
-COPY docker-entrypoint.sh /app/
-RUN chmod +x /app/docker-entrypoint.sh
-
-EXPOSE 8000
-USER app
-
-# Runtime deps
+# Runtime deps - install before switching to app user
 RUN apt-get update && apt-get install -y \
   ca-certificates \
   libpq-dev \
@@ -49,6 +38,12 @@ RUN apt-get update && apt-get install -y \
   net-tools \
   postgresql-client \
   && rm -rf /var/lib/apt/lists/*
+
+COPY docker-entrypoint.sh /app/
+RUN chmod +x /app/docker-entrypoint.sh
+
+EXPOSE 8000
+USER app
 
 ENTRYPOINT ["/app/docker-entrypoint.sh", "postgres-mcp"]
 CMD []
